@@ -1,0 +1,11 @@
+{
+  "id": "watt",
+  "name": "Waterlog All The Things",
+  "version": "1.0",
+  "authors": [
+    "b0undarybreaker"
+  ],
+  "listeners": [
+    "space.bbkr.watt.WattCore"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "minVersion": "0.7.7",
+  "compatibilityLevel": "JAVA_8",
+  "target": "@env(DEFAULT)",
+  "package": "space.bbkr.watt.mixins",
+  "refmap": "mixins.watt.refmap.json",
+  "mixins": [
+    "MixinRepeater",
+    "MixinComparator",
+    "MixinRails",
+    "MixinPoweredRails",
+    "MixinDetectorRails",
+    "MixinLever",
+    "MixinBed",
+    "MixinBanner",
+    "MixinBannerWall",
+    "MixinDoor",
+    "MixinLeaves"
+  ]
+}

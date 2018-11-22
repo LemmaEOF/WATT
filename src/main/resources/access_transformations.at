@@ -1,0 +1,3 @@
+public method net.minecraft.block.BlockRedstoneWire a (Laxg;Lej;Lep;)Lbmf; # BlockRedstoneWire.getSide
+public method net.minecraft.block.BlockDoor b (Larg;)Lblw; # BlockDoor.func_208073_b
+public method net.minecraft.block.BlockLeaves b (Lbkt;Laxt;Lej;)Lbkt; #updateDistance
