@@ -22,6 +22,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import space.bbkr.watt.WattCore;
@@ -36,6 +37,11 @@ public abstract class MixinRepeater extends BlockRedstoneDiode implements IBucke
 
     public MixinRepeater(Builder builder) {
         super(builder);
+        this.setDefaultState(this.stateContainer.getBaseState().withProperty(HORIZONTAL_FACING, EnumFacing.NORTH).withProperty(LOCKED, false).withProperty(DELAY, 1).withProperty(WATERLOGGED, false));
+    }
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    public void InjectRepeater(CallbackInfo ci) {
         this.setDefaultState(this.stateContainer.getBaseState().withProperty(HORIZONTAL_FACING, EnumFacing.NORTH).withProperty(LOCKED, false).withProperty(DELAY, 1).withProperty(WATERLOGGED, false));
     }
 

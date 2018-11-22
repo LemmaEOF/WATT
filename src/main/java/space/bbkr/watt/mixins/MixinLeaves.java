@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import space.bbkr.watt.WattCore;
 
@@ -35,6 +36,11 @@ public abstract class MixinLeaves extends Block implements IBucketPickupHandler,
 
     public MixinLeaves(Builder builder) {
         super(builder);
+        this.setDefaultState(this.stateContainer.getBaseState().withProperty(DISTANCE, 7).withProperty(PERSISTENT, false).withProperty(WATERLOGGED, false));
+    }
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    public void InjectLeaves(CallbackInfo ci) {
         this.setDefaultState(this.stateContainer.getBaseState().withProperty(DISTANCE, 7).withProperty(PERSISTENT, false).withProperty(WATERLOGGED, false));
     }
 
@@ -75,15 +81,6 @@ public abstract class MixinLeaves extends Block implements IBucketPickupHandler,
     }
 
     public boolean receiveFluid(IWorld world, BlockPos pos, IBlockState state, IFluidState fluid) {
-        if (!state.getValue(WATERLOGGED) && fluid.getFluid() == Fluids.WATER) {
-            if (!world.isRemote()) {
-                world.setBlockState(pos, state.withProperty(WATERLOGGED, true), 3);
-                world.getPendingFluidTicks().scheduleUpdate(pos, fluid.getFluid(), fluid.getFluid().getTickRate(world));
-            }
-
-            return true;
-        } else {
-            return false;
-        }
+        return WattCore.receiveFluidUniversal(world, pos, state, fluid, WATERLOGGED);
     }
 }

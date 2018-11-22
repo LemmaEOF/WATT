@@ -15,6 +15,7 @@
     "MixinBed",
     "MixinBanner",
     "MixinBannerWall",
-    "MixinDoor"
+    "MixinDoor",
+    "MixinLeaves"
   ]
 }

@@ -22,6 +22,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import space.bbkr.watt.WattCore;
@@ -35,6 +36,11 @@ public abstract class MixinBannerWall extends BlockAbstractBanner implements IBu
 
     public MixinBannerWall(EnumDyeColor color, Builder builder) {
         super(color, builder);
+        this.setDefaultState(this.stateContainer.getBaseState().withProperty(HORIZONTAL_FACING, EnumFacing.NORTH).withProperty(WATERLOGGED, false));
+    }
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    public void InjectBannerWall(CallbackInfo ci) {
         this.setDefaultState(this.stateContainer.getBaseState().withProperty(HORIZONTAL_FACING, EnumFacing.NORTH).withProperty(WATERLOGGED, false));
     }
 

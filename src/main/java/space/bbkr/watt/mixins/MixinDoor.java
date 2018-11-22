@@ -24,6 +24,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import space.bbkr.watt.WattCore;
@@ -43,6 +44,11 @@ public abstract class MixinDoor extends Block implements IBucketPickupHandler, I
 
     public MixinDoor(Builder builder) {
         super(builder);
+        this.setDefaultState(this.stateContainer.getBaseState().withProperty(FACING, EnumFacing.NORTH).withProperty(OPEN, false).withProperty(HINGE, DoorHingeSide.LEFT).withProperty(POWERED, false).withProperty(HALF, DoubleBlockHalf.LOWER).withProperty(WATERLOGGED, false));
+    }
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    public void InjectDoor(CallbackInfo ci) {
         this.setDefaultState(this.stateContainer.getBaseState().withProperty(FACING, EnumFacing.NORTH).withProperty(OPEN, false).withProperty(HINGE, DoorHingeSide.LEFT).withProperty(POWERED, false).withProperty(HALF, DoubleBlockHalf.LOWER).withProperty(WATERLOGGED, false));
     }
 

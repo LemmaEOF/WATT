@@ -20,6 +20,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import space.bbkr.watt.WattCore;
 
@@ -32,6 +33,11 @@ public abstract class MixinBanner extends BlockAbstractBanner implements IBucket
 
     public MixinBanner(EnumDyeColor color, Builder builder) {
         super(color, builder);
+        this.setDefaultState(this.stateContainer.getBaseState().withProperty(ROTATION, 0).withProperty(WATERLOGGED, false));
+    }
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    public void InjectLeaves(CallbackInfo ci) {
         this.setDefaultState(this.stateContainer.getBaseState().withProperty(ROTATION, 0).withProperty(WATERLOGGED, false));
     }
 

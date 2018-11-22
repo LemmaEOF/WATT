@@ -17,6 +17,9 @@ import net.minecraft.world.IWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import space.bbkr.watt.WattCore;
 
 @Mixin(BlockRail.class)
@@ -28,6 +31,11 @@ public abstract class MixinRails extends BlockRailBase implements IBucketPickupH
 
     public MixinRails(Builder builder) {
         super(false, builder);
+        this.setDefaultState(this.stateContainer.getBaseState().withProperty(SHAPE, RailShape.NORTH_SOUTH).withProperty(WATERLOGGED, false));
+    }
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    public void InjectRails(CallbackInfo ci) {
         this.setDefaultState(this.stateContainer.getBaseState().withProperty(SHAPE, RailShape.NORTH_SOUTH).withProperty(WATERLOGGED, false));
     }
 

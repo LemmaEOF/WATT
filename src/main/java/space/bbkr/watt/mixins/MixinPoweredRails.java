@@ -17,6 +17,9 @@ import net.minecraft.world.IWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import space.bbkr.watt.WattCore;
 
 @Mixin(BlockRailPowered.class)
@@ -29,6 +32,11 @@ public abstract class MixinPoweredRails extends BlockRailBase implements IBucket
 
     public MixinPoweredRails(Builder builder) {
         super(true, builder);
+        this.setDefaultState(this.stateContainer.getBaseState().withProperty(SHAPE, RailShape.NORTH_SOUTH).withProperty(POWERED, false).withProperty(WATERLOGGED, false));
+    }
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    public void InjectPoweredRails(CallbackInfo ci) {
         this.setDefaultState(this.stateContainer.getBaseState().withProperty(SHAPE, RailShape.NORTH_SOUTH).withProperty(POWERED, false).withProperty(WATERLOGGED, false));
     }
 
