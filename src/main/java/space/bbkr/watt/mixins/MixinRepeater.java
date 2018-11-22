@@ -24,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+import space.bbkr.watt.WattCore;
 
 @Mixin(BlockRedstoneRepeater.class)
 public abstract class MixinRepeater extends BlockRedstoneDiode implements IBucketPickupHandler, ILiquidContainer {
@@ -87,15 +88,6 @@ public abstract class MixinRepeater extends BlockRedstoneDiode implements IBucke
     }
 
     public boolean receiveFluid(IWorld world, BlockPos pos, IBlockState state, IFluidState fluid) {
-        if (!state.getValue(WATERLOGGED) && fluid.getFluid() == Fluids.WATER) {
-            if (!world.isRemote()) {
-                world.setBlockState(pos, state.withProperty(WATERLOGGED, true), 3);
-                world.getPendingFluidTicks().scheduleUpdate(pos, fluid.getFluid(), fluid.getFluid().getTickRate(world));
-            }
-
-            return true;
-        } else {
-            return false;
-        }
+        return WattCore.receiveFluidUniversal(world, pos, state, fluid, WATERLOGGED);
     }
 }

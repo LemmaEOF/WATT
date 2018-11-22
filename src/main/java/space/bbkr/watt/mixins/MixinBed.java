@@ -21,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+import space.bbkr.watt.WattCore;
 
 @Mixin(BlockBed.class)
 public abstract class MixinBed extends BlockHorizontal implements IBucketPickupHandler, ILiquidContainer {
@@ -75,15 +76,6 @@ public abstract class MixinBed extends BlockHorizontal implements IBucketPickupH
     }
 
     public boolean receiveFluid(IWorld world, BlockPos pos, IBlockState state, IFluidState fluid) {
-        if (!state.getValue(WATERLOGGED) && fluid.getFluid() == Fluids.WATER) {
-            if (!world.isRemote()) {
-                world.setBlockState(pos, state.withProperty(WATERLOGGED, true), 3);
-                world.getPendingFluidTicks().scheduleUpdate(pos, fluid.getFluid(), fluid.getFluid().getTickRate(world));
-            }
-
-            return true;
-        } else {
-            return false;
-        }
+        return WattCore.receiveFluidUniversal(world, pos, state, fluid, WATERLOGGED);
     }
 }

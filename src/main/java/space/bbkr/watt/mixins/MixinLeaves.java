@@ -19,15 +19,17 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import space.bbkr.watt.WattCore;
 
 @Mixin(BlockLeaves.class)
 public abstract class MixinLeaves extends Block implements IBucketPickupHandler, ILiquidContainer {
 
     @Shadow public static IntegerProperty DISTANCE;
     @Shadow public static BooleanProperty PERSISTENT;
-    @Shadow private static IBlockState updateDistance(IBlockState p_updateDistance_0_, IWorld p_updateDistance_1_, BlockPos p_updateDistance_2_) {
-        return null;
+    @Shadow private static IBlockState updateDistance(IBlockState state, IWorld world, BlockPos pos) {
+        return state.withProperty(WATERLOGGED, false);
     }
+
 
     private static BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
@@ -50,8 +52,7 @@ public abstract class MixinLeaves extends Block implements IBucketPickupHandler,
             cancellable = true)
     public void getWaterloggedState(BlockItemUseContext ctx, CallbackInfoReturnable ci) {
         IFluidState fluid = ctx.getWorld().getFluidState(ctx.getPos());
-
-        IBlockState state = updateDistance(this.getDefaultState().withProperty(PERSISTENT, true), ctx.getWorld(), ctx.getPos()).withProperty(WATERLOGGED, fluid.getFluid() == Fluids.WATER);
+        IBlockState state = updateDistance(this.getDefaultState().withProperty(PERSISTENT, true).withProperty(WATERLOGGED, fluid.getFluid() == Fluids.WATER), ctx.getWorld(), ctx.getPos());
 
         ci.setReturnValue(state);
         ci.cancel();

@@ -21,6 +21,7 @@ import net.minecraft.world.IWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import space.bbkr.watt.WattCore;
 
 @Mixin(BlockRedstoneComparator.class)
 public abstract class MixinComparator extends BlockRedstoneDiode implements IBucketPickupHandler, ILiquidContainer {
@@ -76,15 +77,6 @@ public abstract class MixinComparator extends BlockRedstoneDiode implements IBuc
     }
 
     public boolean receiveFluid(IWorld world, BlockPos pos, IBlockState state, IFluidState fluid) {
-        if (!state.getValue(WATERLOGGED) && fluid.getFluid() == Fluids.WATER) {
-            if (!world.isRemote()) {
-                world.setBlockState(pos, state.withProperty(WATERLOGGED, true), 3);
-                world.getPendingFluidTicks().scheduleUpdate(pos, fluid.getFluid(), fluid.getFluid().getTickRate(world));
-            }
-
-            return true;
-        } else {
-            return false;
-        }
+        return WattCore.receiveFluidUniversal(world, pos, state, fluid, WATERLOGGED);
     }
 }
