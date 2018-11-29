@@ -39,13 +39,9 @@ public class MixinLever extends BlockHorizontalFace implements IBucketPickupHand
         this.setDefaultState(this.stateContainer.getBaseState().withProperty(HORIZONTAL_FACING, EnumFacing.NORTH).withProperty(POWERED, false).withProperty(POWERED, false).withProperty(WATERLOGGED, false).withProperty(FACE, AttachFace.WALL));
     }
 
-    /**
-     * @author b0undarybreaker
-     * @reason need to add waterlogged property
-     */
-    @Overwrite
-    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> p_fillStateContainer_1_) {
-        p_fillStateContainer_1_.add(FACE, HORIZONTAL_FACING, POWERED, WATERLOGGED);
+    @Inject(method = "fillStateContainer", at = @At("TAIL"))
+    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> state, CallbackInfo ci) {
+        state.add(WATERLOGGED);
     }
 
     public IBlockState getStateForPlacement(BlockItemUseContext ctx) {

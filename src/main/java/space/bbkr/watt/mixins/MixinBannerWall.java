@@ -44,16 +44,12 @@ public abstract class MixinBannerWall extends BlockAbstractBanner implements IBu
         this.setDefaultState(this.stateContainer.getBaseState().withProperty(HORIZONTAL_FACING, EnumFacing.NORTH).withProperty(WATERLOGGED, false));
     }
 
-    /**
-     * @author b0undarybreaker
-     * @reason need to add waterlogged property
-     */
-    @Overwrite
-    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> p_fillStateContainer_1_) {
-        p_fillStateContainer_1_.add(HORIZONTAL_FACING, WATERLOGGED);
+    @Inject(method = "fillStateContainer", at = @At("TAIL"))
+    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> state, CallbackInfo ci) {
+        state.add(WATERLOGGED);
     }
 
-    @Inject(method = "getStateForPlacement",
+    @Inject(method = "b",
             at = @At("RETURN"),
             cancellable = true,
             locals = LocalCapture.CAPTURE_FAILEXCEPTION,

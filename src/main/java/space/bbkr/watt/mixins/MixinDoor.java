@@ -52,13 +52,9 @@ public abstract class MixinDoor extends Block implements IBucketPickupHandler, I
         this.setDefaultState(this.stateContainer.getBaseState().withProperty(FACING, EnumFacing.NORTH).withProperty(OPEN, false).withProperty(HINGE, DoorHingeSide.LEFT).withProperty(POWERED, false).withProperty(HALF, DoubleBlockHalf.LOWER).withProperty(WATERLOGGED, false));
     }
 
-    /**
-     * @author b0undarybreaker
-     * @reason need to add waterlogged property
-     */
-    @Overwrite
-    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> p_fillStateContainer_1_) {
-        p_fillStateContainer_1_.add(HALF, FACING, OPEN, HINGE, POWERED, WATERLOGGED);
+    @Inject(method = "fillStateContainer", at = @At("TAIL"))
+    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> state, CallbackInfo ci) {
+        state.add(WATERLOGGED);
     }
 
     /**

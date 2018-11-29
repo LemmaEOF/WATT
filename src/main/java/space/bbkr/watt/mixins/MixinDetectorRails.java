@@ -40,13 +40,9 @@ public abstract class MixinDetectorRails extends BlockRailBase implements IBucke
         this.setDefaultState(this.stateContainer.getBaseState().withProperty(SHAPE, RailShape.NORTH_SOUTH).withProperty(POWERED, false).withProperty(WATERLOGGED, false));
     }
 
-    /**
-     * @author b0undarybreaker
-     * @reason need to add waterlogged property
-     */
-    @Overwrite
-    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> p_fillStateContainer_1_) {
-        p_fillStateContainer_1_.add(SHAPE, POWERED, WATERLOGGED);
+    @Inject(method = "fillStateContainer", at = @At("TAIL"))
+    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> state, CallbackInfo ci) {
+        state.add(WATERLOGGED);
     }
 
     @Override

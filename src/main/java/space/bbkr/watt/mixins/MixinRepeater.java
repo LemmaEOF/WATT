@@ -45,16 +45,12 @@ public abstract class MixinRepeater extends BlockRedstoneDiode implements IBucke
         this.setDefaultState(this.stateContainer.getBaseState().withProperty(HORIZONTAL_FACING, EnumFacing.NORTH).withProperty(LOCKED, false).withProperty(DELAY, 1).withProperty(WATERLOGGED, false));
     }
 
-    /**
-     * @author b0undarybreaker
-     * @reason need to add waterlogged property
-     */
-    @Overwrite
-    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> p_fillStateContainer_1_) {
-        p_fillStateContainer_1_.add(HORIZONTAL_FACING, DELAY, LOCKED, POWERED, WATERLOGGED);
+    @Inject(method = "fillStateContainer", at = @At("TAIL"))
+    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> state, CallbackInfo ci) {
+        state.add(WATERLOGGED);
     }
 
-    @Inject(method = "getStateForPlacement",
+    @Inject(method = "a",
             at = @At("RETURN"),
             cancellable = true,
             locals = LocalCapture.CAPTURE_FAILEXCEPTION,

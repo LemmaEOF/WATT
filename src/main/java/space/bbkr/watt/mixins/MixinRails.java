@@ -39,15 +39,10 @@ public abstract class MixinRails extends BlockRailBase implements IBucketPickupH
         this.setDefaultState(this.stateContainer.getBaseState().withProperty(SHAPE, RailShape.NORTH_SOUTH).withProperty(WATERLOGGED, false));
     }
 
-    /**
-     * @author b0undarybreaker
-     * @reason need to add waterlogged property
-     */
-    @Overwrite
-    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> p_fillStateContainer_1_) {
-        p_fillStateContainer_1_.add(SHAPE, WATERLOGGED);
+    @Inject(method = "fillStateContainer", at = @At("TAIL"))
+    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> state, CallbackInfo ci) {
+        state.add(WATERLOGGED);
     }
-
     @Override
     public IBlockState getStateForPlacement(BlockItemUseContext ctx) {
         IFluidState fluid = ctx.getWorld().getFluidState(ctx.getPos());
