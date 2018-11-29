@@ -35,23 +35,19 @@ public abstract class MixinRepeater extends BlockRedstoneDiode implements IBucke
 
     private static BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
-    public MixinRepeater(Builder builder) {
+    public MixinRepeater(Properties builder) {
         super(builder);
-        this.setDefaultState(this.stateContainer.getBaseState().withProperty(HORIZONTAL_FACING, EnumFacing.NORTH).withProperty(LOCKED, false).withProperty(DELAY, 1).withProperty(WATERLOGGED, false));
+        this.setDefaultState(this.stateContainer.getBaseState().with(HORIZONTAL_FACING, EnumFacing.NORTH).with(LOCKED, false).with(DELAY, 1).with(WATERLOGGED, false));
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void InjectRepeater(CallbackInfo ci) {
-        this.setDefaultState(this.stateContainer.getBaseState().withProperty(HORIZONTAL_FACING, EnumFacing.NORTH).withProperty(LOCKED, false).withProperty(DELAY, 1).withProperty(WATERLOGGED, false));
+        this.setDefaultState(this.stateContainer.getBaseState().with(HORIZONTAL_FACING, EnumFacing.NORTH).with(LOCKED, false).with(DELAY, 1).with(WATERLOGGED, false));
     }
 
-    /**
-     * @author b0undarybreaker
-     * @reason need to add waterlogged property
-     */
-    @Overwrite
-    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> p_fillStateContainer_1_) {
-        p_fillStateContainer_1_.add(HORIZONTAL_FACING, DELAY, LOCKED, POWERED, WATERLOGGED);
+    @Inject(method = "fillStateContainer", at = @At("TAIL"))
+    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> state, CallbackInfo ci) {
+        state.add(WATERLOGGED);
     }
 
     @Inject(method = "getStateForPlacement",
@@ -62,7 +58,7 @@ public abstract class MixinRepeater extends BlockRedstoneDiode implements IBucke
     public void getWaterloggedState(BlockItemUseContext ctx, CallbackInfoReturnable ci, IBlockState lvt_2_1_) {
         IFluidState fluid = ctx.getWorld().getFluidState(ctx.getPos());
 
-        IBlockState state = lvt_2_1_.withProperty(LOCKED, this.isLocked(ctx.getWorld(), ctx.getPos(), lvt_2_1_)).withProperty(WATERLOGGED, fluid.getFluid() == Fluids.WATER);
+        IBlockState state = lvt_2_1_.with(LOCKED, this.isLocked(ctx.getWorld(), ctx.getPos(), lvt_2_1_)).with(WATERLOGGED, fluid.getFluid() == Fluids.WATER);
 
         ci.setReturnValue(state);
         ci.cancel();
@@ -71,14 +67,14 @@ public abstract class MixinRepeater extends BlockRedstoneDiode implements IBucke
     @Inject(method = "updatePostPlacement",
             at = @At("HEAD"))
     public void updateWaterloggedState(IBlockState state, EnumFacing facing, IBlockState newState, IWorld world, BlockPos pos, BlockPos posFrom, CallbackInfoReturnable ci) {
-        if (state.getValue(WATERLOGGED)) {
-            world.getPendingFluidTicks().scheduleUpdate(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
+        if (state.get(WATERLOGGED)) {
+            world.getPendingFluidTicks().scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
         }
     }
 
     public Fluid pickupFluid(IWorld world, BlockPos pos, IBlockState state) {
-        if (state.getValue(WATERLOGGED)) {
-            world.setBlockState(pos, state.withProperty(WATERLOGGED, false), 3);
+        if (state.get(WATERLOGGED)) {
+            world.setBlockState(pos, state.with(WATERLOGGED, false), 3);
             return Fluids.WATER;
         } else {
             return Fluids.EMPTY;
@@ -86,11 +82,11 @@ public abstract class MixinRepeater extends BlockRedstoneDiode implements IBucke
     }
 
     public IFluidState getFluidState(IBlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
+        return state.get(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
     }
 
     public boolean canContainFluid(IBlockReader reader, BlockPos pos, IBlockState state, Fluid fluid) {
-        return !state.getValue(WATERLOGGED) && fluid == Fluids.WATER;
+        return !state.get(WATERLOGGED) && fluid == Fluids.WATER;
     }
 
     public boolean receiveFluid(IWorld world, BlockPos pos, IBlockState state, IFluidState fluid) {

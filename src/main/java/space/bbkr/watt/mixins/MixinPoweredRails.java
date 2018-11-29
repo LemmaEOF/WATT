@@ -30,43 +30,39 @@ public abstract class MixinPoweredRails extends BlockRailBase implements IBucket
 
     private static BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
-    public MixinPoweredRails(Builder builder) {
+    public MixinPoweredRails(Properties builder) {
         super(true, builder);
-        this.setDefaultState(this.stateContainer.getBaseState().withProperty(SHAPE, RailShape.NORTH_SOUTH).withProperty(POWERED, false).withProperty(WATERLOGGED, false));
+        this.setDefaultState(this.stateContainer.getBaseState().with(SHAPE, RailShape.NORTH_SOUTH).with(POWERED, false).with(WATERLOGGED, false));
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void InjectPoweredRails(CallbackInfo ci) {
-        this.setDefaultState(this.stateContainer.getBaseState().withProperty(SHAPE, RailShape.NORTH_SOUTH).withProperty(POWERED, false).withProperty(WATERLOGGED, false));
+        this.setDefaultState(this.stateContainer.getBaseState().with(SHAPE, RailShape.NORTH_SOUTH).with(POWERED, false).with(WATERLOGGED, false));
     }
 
-    /**
-     * @author b0undarybreaker
-     * @reason need to add waterlogged property
-     */
-    @Overwrite
-    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> p_fillStateContainer_1_) {
-        p_fillStateContainer_1_.add(SHAPE, POWERED, WATERLOGGED);
+    @Inject(method = "fillStateContainer", at = @At("TAIL"))
+    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> state, CallbackInfo ci) {
+        state.add(WATERLOGGED);
     }
 
     @Override
     public IBlockState getStateForPlacement(BlockItemUseContext ctx) {
         IFluidState fluid = ctx.getWorld().getFluidState(ctx.getPos());
 
-        return this.getDefaultState().withProperty(WATERLOGGED, fluid.getFluid() == Fluids.WATER);
+        return this.getDefaultState().with(WATERLOGGED, fluid.getFluid() == Fluids.WATER);
     }
 
     @Override
     public IBlockState updatePostPlacement(IBlockState state, EnumFacing facing, IBlockState newState, IWorld world, BlockPos pos, BlockPos posFrom) {
-        if (state.getValue(WATERLOGGED)) {
-            world.getPendingFluidTicks().scheduleUpdate(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
+        if (state.get(WATERLOGGED)) {
+            world.getPendingFluidTicks().scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
         }
         return state;
     }
 
     public Fluid pickupFluid(IWorld world, BlockPos pos, IBlockState state) {
-        if (state.getValue(WATERLOGGED)) {
-            world.setBlockState(pos, state.withProperty(WATERLOGGED, false), 3);
+        if (state.get(WATERLOGGED)) {
+            world.setBlockState(pos, state.with(WATERLOGGED, false), 3);
             return Fluids.WATER;
         } else {
             return Fluids.EMPTY;
@@ -74,11 +70,11 @@ public abstract class MixinPoweredRails extends BlockRailBase implements IBucket
     }
 
     public IFluidState getFluidState(IBlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
+        return state.get(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
     }
 
     public boolean canContainFluid(IBlockReader reader, BlockPos pos, IBlockState state, Fluid fluid) {
-        return !state.getValue(WATERLOGGED) && fluid == Fluids.WATER;
+        return !state.get(WATERLOGGED) && fluid == Fluids.WATER;
     }
 
     public boolean receiveFluid(IWorld world, BlockPos pos, IBlockState state, IFluidState fluid) {

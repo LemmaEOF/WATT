@@ -33,43 +33,39 @@ public abstract class MixinComparator extends BlockRedstoneDiode implements IBuc
 
     private static BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
-    public MixinComparator(Builder builder) {
+    public MixinComparator(Properties builder) {
         super(builder);
-        this.setDefaultState(this.stateContainer.getBaseState().withProperty(HORIZONTAL_FACING, EnumFacing.NORTH).withProperty(POWERED, false).withProperty(MODE, ComparatorMode.COMPARE).withProperty(WATERLOGGED, false));
+        this.setDefaultState(this.stateContainer.getBaseState().with(HORIZONTAL_FACING, EnumFacing.NORTH).with(POWERED, false).with(MODE, ComparatorMode.COMPARE).with(WATERLOGGED, false));
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void InjectComparator(CallbackInfo ci) {
-        this.setDefaultState(this.stateContainer.getBaseState().withProperty(HORIZONTAL_FACING, EnumFacing.NORTH).withProperty(POWERED, false).withProperty(MODE, ComparatorMode.COMPARE).withProperty(WATERLOGGED, false));
+        this.setDefaultState(this.stateContainer.getBaseState().with(HORIZONTAL_FACING, EnumFacing.NORTH).with(POWERED, false).with(MODE, ComparatorMode.COMPARE).with(WATERLOGGED, false));
     }
 
-    /**
-     * @author b0undarybreaker
-     * @reason need to add waterlogged property
-     */
-    @Overwrite
-    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> p_fillStateContainer_1_) {
-        p_fillStateContainer_1_.add(HORIZONTAL_FACING, MODE, POWERED, WATERLOGGED);
+    @Inject(method = "fillStateContainer", at = @At("TAIL"))
+    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> state, CallbackInfo ci) {
+        state.add(WATERLOGGED);
     }
 
     @Override
     public IBlockState getStateForPlacement(BlockItemUseContext ctx) {
         IFluidState fluid = ctx.getWorld().getFluidState(ctx.getPos());
 
-        return this.getDefaultState().withProperty(HORIZONTAL_FACING, ctx.getPlacementHorizontalFacing().getOpposite()).withProperty(WATERLOGGED, fluid.getFluid() == Fluids.WATER);
+        return this.getDefaultState().with(HORIZONTAL_FACING, ctx.getPlacementHorizontalFacing().getOpposite()).with(WATERLOGGED, fluid.getFluid() == Fluids.WATER);
     }
 
     @Override
     public IBlockState updatePostPlacement(IBlockState state, EnumFacing facing, IBlockState newState, IWorld world, BlockPos pos, BlockPos posFrom) {
-        if (state.getValue(WATERLOGGED)) {
-            world.getPendingFluidTicks().scheduleUpdate(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
+        if (state.get(WATERLOGGED)) {
+            world.getPendingFluidTicks().scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
         }
         return state;
     }
 
     public Fluid pickupFluid(IWorld world, BlockPos pos, IBlockState state) {
-        if (state.getValue(WATERLOGGED)) {
-            world.setBlockState(pos, state.withProperty(WATERLOGGED, false), 3);
+        if (state.get(WATERLOGGED)) {
+            world.setBlockState(pos, state.with(WATERLOGGED, false), 3);
             return Fluids.WATER;
         } else {
             return Fluids.EMPTY;
@@ -77,11 +73,11 @@ public abstract class MixinComparator extends BlockRedstoneDiode implements IBuc
     }
 
     public IFluidState getFluidState(IBlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
+        return state.get(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
     }
 
     public boolean canContainFluid(IBlockReader reader, BlockPos pos, IBlockState state, Fluid fluid) {
-        return !state.getValue(WATERLOGGED) && fluid == Fluids.WATER;
+        return !state.get(WATERLOGGED) && fluid == Fluids.WATER;
     }
 
     public boolean receiveFluid(IWorld world, BlockPos pos, IBlockState state, IFluidState fluid) {

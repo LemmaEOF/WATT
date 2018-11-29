@@ -32,23 +32,19 @@ public abstract class MixinBed extends BlockHorizontal implements IBucketPickupH
 
     private static BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
-    public MixinBed(Builder builder) {
+    public MixinBed(Properties builder) {
         super(builder);
-        this.setDefaultState(this.stateContainer.getBaseState().withProperty(PART, BedPart.FOOT).withProperty(OCCUPIED, false).withProperty(WATERLOGGED, false));
+        this.setDefaultState(this.stateContainer.getBaseState().with(PART, BedPart.FOOT).with(OCCUPIED, false).with(WATERLOGGED, false));
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void InjecBed(CallbackInfo ci) {
-        this.setDefaultState(this.stateContainer.getBaseState().withProperty(PART, BedPart.FOOT).withProperty(OCCUPIED, false).withProperty(WATERLOGGED, false));
+        this.setDefaultState(this.stateContainer.getBaseState().with(PART, BedPart.FOOT).with(OCCUPIED, false).with(WATERLOGGED, false));
     }
 
-    /**
-     * @author b0undarybreaker
-     * @reason need to add waterlogged property
-     */
-    @Overwrite
-    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> p_fillStateContainer_1_) {
-        p_fillStateContainer_1_.add(HORIZONTAL_FACING, PART, OCCUPIED, WATERLOGGED);
+    @Inject(method = "fillStateContainer", at = @At("TAIL"))
+    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> state, CallbackInfo ci) {
+        state.add(WATERLOGGED);
     }
 
     @Inject(method = "getStateForPlacement",
@@ -59,7 +55,7 @@ public abstract class MixinBed extends BlockHorizontal implements IBucketPickupH
     public void getWaterloggedState(BlockItemUseContext ctx, CallbackInfoReturnable ci, EnumFacing lvt_2_1_, BlockPos lvt_3_1_, BlockPos lvt_4_1_) {
         IFluidState fluid = ctx.getWorld().getFluidState(ctx.getPos());
 
-        IBlockState state = ctx.getWorld().getBlockState(lvt_4_1_).isReplaceable(ctx) ? this.getDefaultState().withProperty(HORIZONTAL_FACING, lvt_2_1_).withProperty(WATERLOGGED, fluid.getFluid() == Fluids.WATER) : null;
+        IBlockState state = ctx.getWorld().getBlockState(lvt_4_1_).isReplaceable(ctx) ? this.getDefaultState().with(HORIZONTAL_FACING, lvt_2_1_).with(WATERLOGGED, fluid.getFluid() == Fluids.WATER) : null;
 
         ci.setReturnValue(state);
         ci.cancel();
@@ -68,17 +64,17 @@ public abstract class MixinBed extends BlockHorizontal implements IBucketPickupH
     @Inject(method = "updatePostPlacement",
             at = @At("HEAD"))
     public void updateWaterloggedState(IBlockState state, EnumFacing facing, IBlockState newState, IWorld world, BlockPos pos, BlockPos posFrom, CallbackInfoReturnable ci) {
-        if (state.getValue(WATERLOGGED)) {
-            world.getPendingFluidTicks().scheduleUpdate(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
+        if (state.get(WATERLOGGED)) {
+            world.getPendingFluidTicks().scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
         }
     }
 
     public IFluidState getFluidState(IBlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
+        return state.get(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
     }
 
     public boolean canContainFluid(IBlockReader reader, BlockPos pos, IBlockState state, Fluid fluid) {
-        return !state.getValue(WATERLOGGED) && fluid == Fluids.WATER;
+        return !state.get(WATERLOGGED) && fluid == Fluids.WATER;
     }
 
     public boolean receiveFluid(IWorld world, BlockPos pos, IBlockState state, IFluidState fluid) {

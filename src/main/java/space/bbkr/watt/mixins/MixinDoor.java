@@ -38,27 +38,23 @@ public abstract class MixinDoor extends Block implements IBucketPickupHandler, I
     @Shadow public static EnumProperty<DoorHingeSide> HINGE;
     @Shadow public static BooleanProperty POWERED;
     @Shadow public static EnumProperty<DoubleBlockHalf> HALF;
-    @Shadow protected abstract DoorHingeSide func_208073_b(BlockItemUseContext ctx);
+    @Shadow protected abstract DoorHingeSide getHingeSide(BlockItemUseContext ctx);
 
     private static BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
-    public MixinDoor(Builder builder) {
+    public MixinDoor(Properties builder) {
         super(builder);
-        this.setDefaultState(this.stateContainer.getBaseState().withProperty(FACING, EnumFacing.NORTH).withProperty(OPEN, false).withProperty(HINGE, DoorHingeSide.LEFT).withProperty(POWERED, false).withProperty(HALF, DoubleBlockHalf.LOWER).withProperty(WATERLOGGED, false));
+        this.setDefaultState(this.stateContainer.getBaseState().with(FACING, EnumFacing.NORTH).with(OPEN, false).with(HINGE, DoorHingeSide.LEFT).with(POWERED, false).with(HALF, DoubleBlockHalf.LOWER).with(WATERLOGGED, false));
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void InjectDoor(CallbackInfo ci) {
-        this.setDefaultState(this.stateContainer.getBaseState().withProperty(FACING, EnumFacing.NORTH).withProperty(OPEN, false).withProperty(HINGE, DoorHingeSide.LEFT).withProperty(POWERED, false).withProperty(HALF, DoubleBlockHalf.LOWER).withProperty(WATERLOGGED, false));
+        this.setDefaultState(this.stateContainer.getBaseState().with(FACING, EnumFacing.NORTH).with(OPEN, false).with(HINGE, DoorHingeSide.LEFT).with(POWERED, false).with(HALF, DoubleBlockHalf.LOWER).with(WATERLOGGED, false));
     }
 
-    /**
-     * @author b0undarybreaker
-     * @reason need to add waterlogged property
-     */
-    @Overwrite
-    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> p_fillStateContainer_1_) {
-        p_fillStateContainer_1_.add(HALF, FACING, OPEN, HINGE, POWERED, WATERLOGGED);
+    @Inject(method = "fillStateContainer", at = @At("TAIL"))
+    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> state, CallbackInfo ci) {
+        state.add(WATERLOGGED);
     }
 
     /**
@@ -73,7 +69,7 @@ public abstract class MixinDoor extends Block implements IBucketPickupHandler, I
         if (pos.getY() < 255 && ctx.getWorld().getBlockState(pos.up()).isReplaceable(ctx)) {
             World world = ctx.getWorld();
             boolean isOpen = world.isBlockPowered(pos) || world.isBlockPowered(pos.up());
-            return this.getDefaultState().withProperty(FACING, ctx.getPlacementHorizontalFacing()).withProperty(HINGE, this.func_208073_b(ctx)).withProperty(POWERED, isOpen).withProperty(OPEN, isOpen).withProperty(HALF, DoubleBlockHalf.LOWER).withProperty(WATERLOGGED, fluid.getFluid() == Fluids.WATER);
+            return this.getDefaultState().with(FACING, ctx.getPlacementHorizontalFacing()).with(HINGE, this.getHingeSide(ctx)).with(POWERED, isOpen).with(OPEN, isOpen).with(HALF, DoubleBlockHalf.LOWER).with(WATERLOGGED, fluid.getFluid() == Fluids.WATER);
         } else {
             return null;
         }
@@ -86,23 +82,23 @@ public abstract class MixinDoor extends Block implements IBucketPickupHandler, I
     @Overwrite
     public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
         IFluidState fluid = world.getFluidState(pos.up());
-        world.setBlockState(pos.up(), state.withProperty(HALF, DoubleBlockHalf.UPPER).withProperty(WATERLOGGED, fluid.getFluid() == Fluids.WATER), 3);
+        world.setBlockState(pos.up(), state.with(HALF, DoubleBlockHalf.UPPER).with(WATERLOGGED, fluid.getFluid() == Fluids.WATER), 3);
     }
 
     @Inject(method = "updatePostPlacement",
             at = @At("HEAD"))
     public void updateWaterloggedState(IBlockState state, EnumFacing facing, IBlockState newState, IWorld world, BlockPos pos, BlockPos posFrom, CallbackInfoReturnable ci) {
-        if (state.getValue(WATERLOGGED)) {
-            world.getPendingFluidTicks().scheduleUpdate(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
+        if (state.get(WATERLOGGED)) {
+            world.getPendingFluidTicks().scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
         }
     }
 
     public IFluidState getFluidState(IBlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
+        return state.get(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
     }
 
     public boolean canContainFluid(IBlockReader reader, BlockPos pos, IBlockState state, Fluid fluid) {
-        return !state.getValue(WATERLOGGED) && fluid == Fluids.WATER;
+        return !state.get(WATERLOGGED) && fluid == Fluids.WATER;
     }
 
     public boolean receiveFluid(IWorld world, BlockPos pos, IBlockState state, IFluidState fluid) {

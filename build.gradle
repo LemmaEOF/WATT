@@ -1,11 +1,12 @@
 buildscript {
     repositories {
         jcenter()
-        maven { url 'https://www.dimdev.org/maven/' }
+        maven { url 'https://www.jitpack.io' }
         maven { url 'http://repo.spongepowered.org/maven' }
+        maven { url 'http://files.minecraftforge.net/maven' }
     }
     dependencies {
-        classpath 'org.dimdev:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'com.github.Chocohead:ForgeGradle:moderniser-SNAPSHOT'
         classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
     }
 }
@@ -16,7 +17,7 @@ apply plugin: 'java'
 
 group 'space.bbkr.watt'
 version '1.0'
-archivesBaseName = 'Watt'
+archivesBaseName = 'WATT'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -25,6 +26,12 @@ repositories {
     mavenCentral()
     maven { url 'https://www.dimdev.org/maven/' }
     maven { url 'https://repo.spongepowered.org/maven/' }
+    maven { url 'https://www.jitpack.io' }
+    maven { url "http://repo.strezz.org/artifactory/list/Strezz-Central" }
+}
+
+dependencies {
+    implementation 'com.github.Chocohead:Rift:f76cf44d887d290782590c99770876393c924333:dev'
 }
 
 dependencies {
@@ -37,8 +44,8 @@ mixin {
 }
 
 minecraft {
-    version = '1.13'
-    mappings = 'snapshot_20180826'
+    version = '1.13.2'
+    mappings = 'snapshot_20181120'
     runDir = 'run'
     tweakClass = 'org.dimdev.riftloader.launch.RiftLoaderTweaker'
 }

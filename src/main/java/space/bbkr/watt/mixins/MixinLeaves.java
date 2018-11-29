@@ -28,29 +28,25 @@ public abstract class MixinLeaves extends Block implements IBucketPickupHandler,
     @Shadow public static IntegerProperty DISTANCE;
     @Shadow public static BooleanProperty PERSISTENT;
     @Shadow private static IBlockState updateDistance(IBlockState state, IWorld world, BlockPos pos) {
-        return state.withProperty(WATERLOGGED, false);
+        return state.with(WATERLOGGED, false);
     }
 
 
     private static BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
-    public MixinLeaves(Builder builder) {
+    public MixinLeaves(Properties builder) {
         super(builder);
-        this.setDefaultState(this.stateContainer.getBaseState().withProperty(DISTANCE, 7).withProperty(PERSISTENT, false).withProperty(WATERLOGGED, false));
+        this.setDefaultState(this.stateContainer.getBaseState().with(DISTANCE, 7).with(PERSISTENT, false).with(WATERLOGGED, false));
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void InjectLeaves(CallbackInfo ci) {
-        this.setDefaultState(this.stateContainer.getBaseState().withProperty(DISTANCE, 7).withProperty(PERSISTENT, false).withProperty(WATERLOGGED, false));
+        this.setDefaultState(this.stateContainer.getBaseState().with(DISTANCE, 7).with(PERSISTENT, false).with(WATERLOGGED, false));
     }
 
-    /**
-     * @author b0undarybreaker
-     * @reason need to add waterlogged property
-     */
-    @Overwrite
-    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> p_fillStateContainer_1_) {
-        p_fillStateContainer_1_.add(DISTANCE, PERSISTENT, WATERLOGGED);
+    @Inject(method = "fillStateContainer", at = @At("TAIL"))
+    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> state, CallbackInfo ci) {
+        state.add(WATERLOGGED);
     }
 
     @Inject(method = "getStateForPlacement",
@@ -58,7 +54,7 @@ public abstract class MixinLeaves extends Block implements IBucketPickupHandler,
             cancellable = true)
     public void getWaterloggedState(BlockItemUseContext ctx, CallbackInfoReturnable ci) {
         IFluidState fluid = ctx.getWorld().getFluidState(ctx.getPos());
-        IBlockState state = updateDistance(this.getDefaultState().withProperty(PERSISTENT, true).withProperty(WATERLOGGED, fluid.getFluid() == Fluids.WATER), ctx.getWorld(), ctx.getPos());
+        IBlockState state = updateDistance(this.getDefaultState().with(PERSISTENT, true).with(WATERLOGGED, fluid.getFluid() == Fluids.WATER), ctx.getWorld(), ctx.getPos());
 
         ci.setReturnValue(state);
         ci.cancel();
@@ -67,17 +63,17 @@ public abstract class MixinLeaves extends Block implements IBucketPickupHandler,
     @Inject(method = "updatePostPlacement",
             at = @At("HEAD"))
     public void updateWaterloggedState(IBlockState state, EnumFacing facing, IBlockState newState, IWorld world, BlockPos pos, BlockPos posFrom, CallbackInfoReturnable ci) {
-        if (state.getValue(WATERLOGGED)) {
-            world.getPendingFluidTicks().scheduleUpdate(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
+        if (state.get(WATERLOGGED)) {
+            world.getPendingFluidTicks().scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
         }
     }
 
     public IFluidState getFluidState(IBlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
+        return state.get(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
     }
 
     public boolean canContainFluid(IBlockReader reader, BlockPos pos, IBlockState state, Fluid fluid) {
-        return !state.getValue(WATERLOGGED) && fluid == Fluids.WATER;
+        return !state.get(WATERLOGGED) && fluid == Fluids.WATER;
     }
 
     public boolean receiveFluid(IWorld world, BlockPos pos, IBlockState state, IFluidState fluid) {

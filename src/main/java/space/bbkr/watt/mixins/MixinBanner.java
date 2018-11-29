@@ -15,8 +15,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -27,27 +27,23 @@ import space.bbkr.watt.WattCore;
 @Mixin(BlockBanner.class)
 public abstract class MixinBanner extends BlockAbstractBanner implements IBucketPickupHandler, ILiquidContainer {
 
-    @Shadow public static IntegerProperty ROTATION;
+    @Final @Shadow public static IntegerProperty ROTATION;
 
     private static BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
-    public MixinBanner(EnumDyeColor color, Builder builder) {
+    public MixinBanner(EnumDyeColor color, Properties builder) {
         super(color, builder);
-        this.setDefaultState(this.stateContainer.getBaseState().withProperty(ROTATION, 0).withProperty(WATERLOGGED, false));
+        this.setDefaultState(this.stateContainer.getBaseState().with(ROTATION, 0).with(WATERLOGGED, false));
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void InjectLeaves(CallbackInfo ci) {
-        this.setDefaultState(this.stateContainer.getBaseState().withProperty(ROTATION, 0).withProperty(WATERLOGGED, false));
+        this.setDefaultState(this.stateContainer.getBaseState().with(ROTATION, 0).with(WATERLOGGED, false));
     }
 
-    /**
-     * @author b0undarybreaker
-     * @reason need to add waterlogged property
-     */
-    @Overwrite
-    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> p_fillStateContainer_1_) {
-        p_fillStateContainer_1_.add(ROTATION, WATERLOGGED);
+    @Inject(method = "fillStateContainer", at = @At("TAIL"))
+    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> state, CallbackInfo ci) {
+        state.add(WATERLOGGED);
     }
 
     @Inject(method = "getStateForPlacement",
@@ -56,7 +52,7 @@ public abstract class MixinBanner extends BlockAbstractBanner implements IBucket
     public void getWaterloggedState(BlockItemUseContext ctx, CallbackInfoReturnable ci) {
         IFluidState fluid = ctx.getWorld().getFluidState(ctx.getPos());
 
-        IBlockState state = this.getDefaultState().withProperty(ROTATION, MathHelper.floor((double)((180.0F + ctx.getPlacementYaw()) * 16.0F / 360.0F) + 0.5D) & 15).withProperty(WATERLOGGED, fluid.getFluid() == Fluids.WATER);
+        IBlockState state = this.getDefaultState().with(ROTATION, MathHelper.floor((double)((180.0F + ctx.getPlacementYaw()) * 16.0F / 360.0F) + 0.5D) & 15).with(WATERLOGGED, fluid.getFluid() == Fluids.WATER);
 
         ci.setReturnValue(state);
         ci.cancel();
@@ -65,17 +61,17 @@ public abstract class MixinBanner extends BlockAbstractBanner implements IBucket
     @Inject(method = "updatePostPlacement",
             at = @At("HEAD"))
     public void updateWaterloggedState(IBlockState state, EnumFacing facing, IBlockState newState, IWorld world, BlockPos pos, BlockPos posFrom, CallbackInfoReturnable ci) {
-        if (state.getValue(WATERLOGGED)) {
-            world.getPendingFluidTicks().scheduleUpdate(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
+        if (state.get(WATERLOGGED)) {
+            world.getPendingFluidTicks().scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
         }
     }
 
     public IFluidState getFluidState(IBlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
+        return state.get(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
     }
 
     public boolean canContainFluid(IBlockReader reader, BlockPos pos, IBlockState state, Fluid fluid) {
-        return !state.getValue(WATERLOGGED) && fluid == Fluids.WATER;
+        return !state.get(WATERLOGGED) && fluid == Fluids.WATER;
     }
 
     public boolean receiveFluid(IWorld world, BlockPos pos, IBlockState state, IFluidState fluid) {

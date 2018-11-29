@@ -29,27 +29,23 @@ public class MixinLever extends BlockHorizontalFace implements IBucketPickupHand
 
     private static BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
-    public MixinLever(Builder builder) {
+    public MixinLever(Properties builder) {
         super(builder);
-        this.setDefaultState(this.stateContainer.getBaseState().withProperty(HORIZONTAL_FACING, EnumFacing.NORTH).withProperty(POWERED, false).withProperty(POWERED, false).withProperty(WATERLOGGED, false).withProperty(FACE, AttachFace.WALL));
+        this.setDefaultState(this.stateContainer.getBaseState().with(HORIZONTAL_FACING, EnumFacing.NORTH).with(POWERED, false).with(POWERED, false).with(WATERLOGGED, false).with(FACE, AttachFace.WALL));
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void InjectLever(CallbackInfo ci) {
-        this.setDefaultState(this.stateContainer.getBaseState().withProperty(HORIZONTAL_FACING, EnumFacing.NORTH).withProperty(POWERED, false).withProperty(POWERED, false).withProperty(WATERLOGGED, false).withProperty(FACE, AttachFace.WALL));
+        this.setDefaultState(this.stateContainer.getBaseState().with(HORIZONTAL_FACING, EnumFacing.NORTH).with(POWERED, false).with(POWERED, false).with(WATERLOGGED, false).with(FACE, AttachFace.WALL));
     }
 
-    /**
-     * @author b0undarybreaker
-     * @reason need to add waterlogged property
-     */
-    @Overwrite
-    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> p_fillStateContainer_1_) {
-        p_fillStateContainer_1_.add(FACE, HORIZONTAL_FACING, POWERED, WATERLOGGED);
+    @Inject(method = "fillStateContainer", at = @At("TAIL"))
+    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, IBlockState> state, CallbackInfo ci) {
+        state.add(WATERLOGGED);
     }
 
     public IBlockState getStateForPlacement(BlockItemUseContext ctx) {
-        EnumFacing[] face = ctx.func_196009_e();
+        EnumFacing[] face = ctx.getNearestLookingDirections();
         int len = face.length;
 
         for(int i = 0; i < len; i++) {
@@ -57,9 +53,9 @@ public class MixinLever extends BlockHorizontalFace implements IBucketPickupHand
             IBlockState state;
             IFluidState fluid = ctx.getWorld().getFluidState(ctx.getPos());
             if (facing.getAxis() == EnumFacing.Axis.Y) {
-                state = this.getDefaultState().withProperty(FACE, facing == EnumFacing.UP ? AttachFace.CEILING : AttachFace.FLOOR).withProperty(HORIZONTAL_FACING, ctx.getPlacementHorizontalFacing()).withProperty(WATERLOGGED, fluid.getFluid() == Fluids.WATER);
+                state = this.getDefaultState().with(FACE, facing == EnumFacing.UP ? AttachFace.CEILING : AttachFace.FLOOR).with(HORIZONTAL_FACING, ctx.getPlacementHorizontalFacing()).with(WATERLOGGED, fluid.getFluid() == Fluids.WATER);
             } else {
-                state = this.getDefaultState().withProperty(FACE, AttachFace.WALL).withProperty(HORIZONTAL_FACING, facing.getOpposite()).withProperty(WATERLOGGED, fluid.getFluid() == Fluids.WATER);
+                state = this.getDefaultState().with(FACE, AttachFace.WALL).with(HORIZONTAL_FACING, facing.getOpposite()).with(WATERLOGGED, fluid.getFluid() == Fluids.WATER);
             }
 
             if (state.isValidPosition(ctx.getWorld(), ctx.getPos())) {
@@ -71,15 +67,15 @@ public class MixinLever extends BlockHorizontalFace implements IBucketPickupHand
     }
 
     public IBlockState updatePostPlacement(IBlockState state, EnumFacing facing, IBlockState newState, IWorld world, BlockPos pos, BlockPos posFrom) {
-        if (state.getValue(WATERLOGGED)) {
-            world.getPendingFluidTicks().scheduleUpdate(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
+        if (state.get(WATERLOGGED)) {
+            world.getPendingFluidTicks().scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
         }
-        return func_196365_i(state).getOpposite() == facing && !state.isValidPosition(world, pos) ? Blocks.AIR.getDefaultState() : super.updatePostPlacement(state, facing, newState, world, pos, posFrom);
+        return getFacing(state).getOpposite() == facing && !state.isValidPosition(world, pos) ? Blocks.AIR.getDefaultState() : super.updatePostPlacement(state, facing, newState, world, pos, posFrom);
     }
 
     public Fluid pickupFluid(IWorld world, BlockPos pos, IBlockState state) {
-        if (state.getValue(WATERLOGGED)) {
-            world.setBlockState(pos, state.withProperty(WATERLOGGED, false), 3);
+        if (state.get(WATERLOGGED)) {
+            world.setBlockState(pos, state.with(WATERLOGGED, false), 3);
             return Fluids.WATER;
         } else {
             return Fluids.EMPTY;
@@ -87,11 +83,11 @@ public class MixinLever extends BlockHorizontalFace implements IBucketPickupHand
     }
 
     public IFluidState getFluidState(IBlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
+        return state.get(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
     }
 
     public boolean canContainFluid(IBlockReader reader, BlockPos pos, IBlockState state, Fluid fluid) {
-        return !state.getValue(WATERLOGGED) && fluid == Fluids.WATER;
+        return !state.get(WATERLOGGED) && fluid == Fluids.WATER;
     }
 
     public boolean receiveFluid(IWorld world, BlockPos pos, IBlockState state, IFluidState fluid) {

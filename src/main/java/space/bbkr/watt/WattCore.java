@@ -18,10 +18,10 @@ public class WattCore implements InitializationListener {
     }
 
     public static boolean receiveFluidUniversal(IWorld world, BlockPos pos, IBlockState state, IFluidState fluid, BooleanProperty waterlogged) {
-        if (!state.getValue(waterlogged) && fluid.getFluid() == Fluids.WATER) {
+        if (!state.get(waterlogged) && fluid.getFluid() == Fluids.WATER) {
             if (!world.isRemote()) {
-                world.setBlockState(pos, state.withProperty(waterlogged, true), 3);
-                world.getPendingFluidTicks().scheduleUpdate(pos, fluid.getFluid(), fluid.getFluid().getTickRate(world));
+                world.setBlockState(pos, state.with(waterlogged, true), 3);
+                world.getPendingFluidTicks().scheduleTick(pos, fluid.getFluid(), fluid.getFluid().getTickRate(world));
             }
 
             return true;
