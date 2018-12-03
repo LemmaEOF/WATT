@@ -10,10 +10,12 @@ import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.EnumProperty;
 import net.minecraft.state.properties.BedPart;
 import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.state.properties.DoubleBlockHalf;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -23,6 +25,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import space.bbkr.watt.WattCore;
+
+import javax.annotation.Nullable;
 
 @Mixin(BlockBed.class)
 public abstract class MixinBed extends BlockHorizontal implements IBucketPickupHandler, ILiquidContainer {
@@ -47,18 +51,20 @@ public abstract class MixinBed extends BlockHorizontal implements IBucketPickupH
         state.add(WATERLOGGED);
     }
 
-    @Inject(method = "getStateForPlacement",
-            at = @At("RETURN"),
-            cancellable = true,
-            locals = LocalCapture.CAPTURE_FAILEXCEPTION,
-            remap = false)
-    public void getWaterloggedState(BlockItemUseContext ctx, CallbackInfoReturnable ci, EnumFacing lvt_2_1_, BlockPos lvt_3_1_, BlockPos lvt_4_1_) {
+    /**
+     * @author b0undarybreaker
+     * @reason something is wrong with the local variable table so I had to rip it wholecloth and rewrite
+     */
+    @Overwrite
+    @Nullable
+    public IBlockState getStateForPlacement(BlockItemUseContext ctx) {
+        BlockPos pos = ctx.getPos();
         IFluidState fluid = ctx.getWorld().getFluidState(ctx.getPos());
-
-        IBlockState state = ctx.getWorld().getBlockState(lvt_4_1_).isReplaceable(ctx) ? this.getDefaultState().with(HORIZONTAL_FACING, lvt_2_1_).with(WATERLOGGED, fluid.getFluid() == Fluids.WATER) : null;
-
-        ci.setReturnValue(state);
-        ci.cancel();
+        if (pos.getY() < 255 && ctx.getWorld().getBlockState(pos.up()).isReplaceable(ctx)) {
+            return this.getDefaultState().with(HORIZONTAL_FACING, ctx.getPlacementHorizontalFacing()).with(WATERLOGGED, fluid.getFluid() == Fluids.WATER);
+        } else {
+            return null;
+        }
     }
 
     @Inject(method = "updatePostPlacement",

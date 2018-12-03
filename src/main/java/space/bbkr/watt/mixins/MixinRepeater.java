@@ -50,7 +50,7 @@ public abstract class MixinRepeater extends BlockRedstoneDiode implements IBucke
         state.add(WATERLOGGED);
     }
 
-    @Inject(method = "getStateForPlacement",
+    @Inject(method = "a",
             at = @At("RETURN"),
             cancellable = true,
             locals = LocalCapture.CAPTURE_FAILEXCEPTION,
